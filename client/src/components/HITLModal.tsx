@@ -17,6 +17,16 @@ export const HITLModal: React.FC<HITLModalProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSubmitting) {
+        onDismiss();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSubmitting, onDismiss]);
+
   if (pendingActions.length === 0) return null;
 
   const currentAction = pendingActions[0];
@@ -34,10 +44,15 @@ export const HITLModal: React.FC<HITLModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay">
+    <div 
+      className="modal-overlay" 
+      role="dialog" 
+      aria-modal="true" 
+      aria-labelledby="hitl-modal-title"
+    >
       <div className="modal-dialog">
-        <h3 className="modal-title">
-          <AlertOctagon size={24} color="#f43f5e" />
+        <h3 className="modal-title" id="hitl-modal-title">
+          <AlertOctagon size={24} color="#f43f5e" aria-hidden="true" />
           <span>Human-In-The-Loop (HITL) Authorization Required</span>
         </h3>
 
@@ -72,7 +87,12 @@ export const HITLModal: React.FC<HITLModalProps> = ({
         </div>
 
         <div className="modal-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button className="btn-secondary" onClick={onDismiss} disabled={isSubmitting}>
+          <button 
+            className="btn-secondary" 
+            onClick={onDismiss} 
+            disabled={isSubmitting}
+            aria-label="Defer and close approval dialog"
+          >
             Defer / Close
           </button>
           {onReject && (
@@ -82,8 +102,9 @@ export const HITLModal: React.FC<HITLModalProps> = ({
               style={{ color: '#fb7185', borderColor: 'rgba(244, 63, 94, 0.4)' }}
               onClick={handleRejectClick}
               disabled={isSubmitting}
+              aria-label="Deny and quarantine this autonomous action"
             >
-              <XCircle size={16} />
+              <XCircle size={16} aria-hidden="true" />
               <span>{isSubmitting ? 'Processing...' : 'Deny / Quarantine'}</span>
             </button>
           )}
@@ -92,8 +113,9 @@ export const HITLModal: React.FC<HITLModalProps> = ({
             className="btn-hitl-sign" 
             onClick={handleApproveClick}
             disabled={isSubmitting}
+            aria-label="Cryptographically sign and execute order"
           >
-            <UserCheck size={16} />
+            <UserCheck size={16} aria-hidden="true" />
             <span>{isSubmitting ? 'Signing Order...' : 'Cryptographically Sign & Execute Order'}</span>
           </button>
         </div>

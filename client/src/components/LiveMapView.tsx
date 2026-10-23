@@ -25,7 +25,10 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({ facilities }) => {
       </div>
 
       {/* Visual Map Canvas Representation */}
-      <div style={{ 
+      <div 
+        role="region"
+        aria-label="Interactive Geospatial Bio-Routing Map"
+        style={{ 
         position: 'relative', 
         height: '360px', 
         background: 'radial-gradient(ellipse at center, #0f1c3f 0%, #080c16 100%)', 

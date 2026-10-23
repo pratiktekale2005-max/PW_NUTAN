@@ -50,15 +50,52 @@ export const AgentThoughtStream: React.FC<AgentThoughtStreamProps> = ({
     <div className="panel" style={{ height: '100%' }}>
       <div className="panel-header">
         <div className="panel-title">
-          <Sparkles size={18} color="#6366f1" />
+          <Sparkles size={18} color="#6366f1" aria-hidden="true" />
           <span>Autonomous Agent Cognitive Stream (ReAct Loop)</span>
         </div>
         {isStreaming && (
-          <div className="status-pill" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
+          <div className="status-pill" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', borderColor: 'rgba(99, 102, 241, 0.3)' }} aria-live="assertive">
             <span className="pulse-dot" style={{ backgroundColor: '#818cf8', boxShadow: '0 0 8px #818cf8' }}></span>
             <span>REASONING IN PROGRESS</span>
           </div>
         )}
+      </div>
+
+      {/* 9-Stage Cognitive Agent Execution Pipeline Ribbon */}
+      <div 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          flexWrap: 'wrap',
+          padding: '0.45rem 0.65rem',
+          marginBottom: '0.75rem',
+          background: 'rgba(15, 23, 42, 0.6)',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.68rem',
+          fontWeight: 700,
+          color: 'var(--text-muted)'
+        }}
+        aria-label="Cognitive Execution Pipeline"
+      >
+        <span style={{ color: '#38bdf8' }}>OBSERVE</span>
+        <span>→</span>
+        <span style={{ color: '#ef4444' }}>VALIDATE</span>
+        <span>→</span>
+        <span style={{ color: '#60a5fa' }}>REASON</span>
+        <span>→</span>
+        <span style={{ color: '#a78bfa' }}>PLAN</span>
+        <span>→</span>
+        <span style={{ color: '#f59e0b' }}>TOOL</span>
+        <span>→</span>
+        <span style={{ color: '#34d399' }}>VERIFY</span>
+        <span>→</span>
+        <span style={{ color: '#f43f5e' }}>APPROVAL</span>
+        <span>→</span>
+        <span style={{ color: '#ec4899' }}>AUDIT</span>
+        <span>→</span>
+        <span style={{ color: '#ffffff' }}>RESPOND</span>
       </div>
 
       {selectedIncidentTitle && (
@@ -82,7 +119,7 @@ export const AgentThoughtStream: React.FC<AgentThoughtStreamProps> = ({
           <p style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>Select an incident or trigger a scenario to watch the autonomous agent reason in real time.</p>
         </div>
       ) : (
-        <div className="thought-stream">
+        <div className="thought-stream" role="feed" aria-label="Autonomous Agent Reasoning Steps" aria-busy={isStreaming}>
           {steps.map((step) => (
             <div key={step.id} className={`thought-card stage-${step.stage}`}>
               <div className="thought-card-header">

@@ -14,7 +14,7 @@ interface LiveIncidentConsoleProps {
   incidents: Incident[];
   selectedIncidentId?: string;
   onSelectIncident: (id: string) => void;
-  onTriggerScenario: (scenarioType: 'COLD_CHAIN' | 'CLINICAL_DRUG' | 'ADVERSARIAL_INJECTION' | 'CUSTOM', customData?: any) => void;
+  onTriggerScenario: (scenarioType: 'COLD_CHAIN' | 'CLINICAL_DRUG' | 'ADVERSARIAL_INJECTION' | 'CUSTOM', customData?: Record<string, unknown>) => void;
   isLoading: boolean;
 }
 
@@ -92,50 +92,65 @@ export const LiveIncidentConsole: React.FC<LiveIncidentConsoleProps> = ({
         Quick Live Scenario Triggers (For Hackathon Judges):
       </div>
 
-      <div className="scenario-bar">
+      <div className="scenario-bar" role="toolbar" aria-label="Incident scenario triggers">
         <button 
           id="btn-scenario-cold-chain"
+          type="button"
+          aria-label="Trigger Cold-Chain Excursion Scenario"
           className="scenario-btn critical" 
           onClick={() => onTriggerScenario('COLD_CHAIN')}
           disabled={isLoading}
         >
-          <ThermometerSnowflake size={15} color="#06b6d4" />
+          <ThermometerSnowflake size={15} color="#06b6d4" aria-hidden="true" />
           <span>Cold-Chain Excursion</span>
         </button>
 
         <button 
           id="btn-scenario-clinical-drug"
+          type="button"
+          aria-label="Trigger ICU Drug Contraindication Scenario"
           className="scenario-btn" 
           onClick={() => onTriggerScenario('CLINICAL_DRUG')}
           disabled={isLoading}
         >
-          <Pill size={15} color="#ec4899" />
+          <Pill size={15} color="#ec4899" aria-hidden="true" />
           <span>ICU Drug Contraindication</span>
         </button>
 
         <button 
           id="btn-scenario-adversarial"
+          type="button"
+          aria-label="Trigger Adversarial Prompt Attack Scenario"
           className="scenario-btn" 
           onClick={() => onTriggerScenario('ADVERSARIAL_INJECTION')}
           disabled={isLoading}
         >
-          <ShieldAlert size={15} color="#ef4444" />
+          <ShieldAlert size={15} color="#ef4444" aria-hidden="true" />
           <span>Adversarial Prompt Attack</span>
         </button>
       </div>
 
       <div style={{ margin: '0.75rem 0 0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
         <span>Recorded Incidents ({incidents.length})</span>
-        <span>Click to view reasoning trace</span>
+        <span>Click or press Enter to view reasoning trace</span>
       </div>
 
-      <div className="incident-list">
+      <div className="incident-list" role="listbox" aria-label="Incident History">
         {incidents.map((inc) => (
           <div 
             key={inc.id}
             id={`incident-item-${inc.id}`}
+            role="option"
+            tabIndex={0}
+            aria-selected={selectedIncidentId === inc.id}
             className={`incident-card ${selectedIncidentId === inc.id ? 'active' : ''}`}
             onClick={() => onSelectIncident(inc.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelectIncident(inc.id);
+              }
+            }}
           >
             <div className="incident-card-top">
               <span className={`badge ${getPriorityBadgeClass(inc.priority)}`}>
@@ -157,19 +172,28 @@ export const LiveIncidentConsole: React.FC<LiveIncidentConsoleProps> = ({
       </div>
 
       {showCustomModal && (
-        <div className="modal-overlay">
+        <div 
+          className="modal-overlay" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="custom-incident-dialog-title"
+        >
           <div className="modal-dialog">
-            <h3 className="modal-title">
-              <PlusCircle size={20} color="#6366f1" />
+            <h3 className="modal-title" id="custom-incident-dialog-title">
+              <PlusCircle size={20} color="#6366f1" aria-hidden="true" />
               <span>Simulate Custom Healthcare / Bio-Logistics Incident</span>
             </h3>
 
             <form onSubmit={handleCustomSubmit}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                <label 
+                  htmlFor="custom-title-input" 
+                  style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}
+                >
                   Incident Title / Headline
                 </label>
                 <input 
+                  id="custom-title-input"
                   type="text" 
                   value={customTitle} 
                   onChange={(e) => setCustomTitle(e.target.value)}
@@ -181,12 +205,16 @@ export const LiveIncidentConsole: React.FC<LiveIncidentConsoleProps> = ({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                  <label 
+                    htmlFor="custom-type-select" 
+                    style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}
+                  >
                     Incident Type
                   </label>
                   <select 
+                    id="custom-type-select"
                     value={customType} 
-                    onChange={(e) => setCustomType(e.target.value as any)}
+                    onChange={(e) => setCustomType(e.target.value as Incident['type'])}
                     style={{ width: '100%', padding: '0.6rem 0.85rem', background: '#0e1424', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#ffffff' }}
                   >
                     <option value="COLD_CHAIN_EXCURSION">Cold-Chain Excursion</option>
@@ -197,12 +225,16 @@ export const LiveIncidentConsole: React.FC<LiveIncidentConsoleProps> = ({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                  <label 
+                    htmlFor="custom-priority-select" 
+                    style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}
+                  >
                     Priority Acuity Tier
                   </label>
                   <select 
+                    id="custom-priority-select"
                     value={customPriority} 
-                    onChange={(e) => setCustomPriority(e.target.value as any)}
+                    onChange={(e) => setCustomPriority(e.target.value as Incident['priority'])}
                     style={{ width: '100%', padding: '0.6rem 0.85rem', background: '#0e1424', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#ffffff' }}
                   >
                     <option value="CRITICAL">CRITICAL (Emergency Siren)</option>
@@ -213,10 +245,14 @@ export const LiveIncidentConsole: React.FC<LiveIncidentConsoleProps> = ({
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                <label 
+                  htmlFor="custom-payload-textarea" 
+                  style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}
+                >
                   Telemetry / Clinical Payload (JSON)
                 </label>
                 <textarea 
+                  id="custom-payload-textarea"
                   rows={5}
                   value={customPayloadText}
                   onChange={(e) => setCustomPayloadText(e.target.value)}

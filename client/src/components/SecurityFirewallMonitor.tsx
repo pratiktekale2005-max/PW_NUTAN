@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { MerkleAuditBlock } from '../types/index.js';
+import type { MerkleAuditBlock, SecurityAssessment, SecurityScanResponse } from '../types/index.js';
 import { 
   ShieldAlert, 
   Lock, 
@@ -11,7 +11,7 @@ import {
 
 interface SecurityFirewallMonitorProps {
   auditBlocks: MerkleAuditBlock[];
-  onTestInput: (input: string) => Promise<any>;
+  onTestInput: (input: string) => Promise<SecurityScanResponse>;
 }
 
 export const SecurityFirewallMonitor: React.FC<SecurityFirewallMonitorProps> = ({
@@ -19,7 +19,7 @@ export const SecurityFirewallMonitor: React.FC<SecurityFirewallMonitorProps> = (
   onTestInput
 }) => {
   const [testInput, setTestInput] = useState('');
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<SecurityAssessment | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
@@ -86,12 +86,19 @@ export const SecurityFirewallMonitor: React.FC<SecurityFirewallMonitorProps> = (
         </div>
 
         <div style={{ marginBottom: '1rem' }}>
+          <label 
+            htmlFor="input-firewall-test" 
+            style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}
+          >
+            Payload Input for LLM Security Firewall:
+          </label>
           <textarea
             id="input-firewall-test"
             rows={4}
             value={testInput}
             onChange={(e) => setTestInput(e.target.value)}
             placeholder="Type or paste any clinical note, IoT payload, or adversarial attack vector..."
+            aria-label="Security Firewall Test Input"
             style={{
               width: '100%',
               padding: '0.75rem 1rem',
@@ -107,6 +114,8 @@ export const SecurityFirewallMonitor: React.FC<SecurityFirewallMonitorProps> = (
 
         <button
           id="btn-firewall-scan"
+          type="button"
+          aria-label="Inspect with AegisShield Firewall"
           className="btn-primary"
           style={{ width: '100%', justifyContent: 'center' }}
           onClick={() => handleScan(testInput)}

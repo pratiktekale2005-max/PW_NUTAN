@@ -1,4 +1,17 @@
-import type { Incident, AgentStep, HITLAction, MerkleAuditBlock, TelemetryMetrics, CertifiedFacility } from '../types/index.js';
+import type { 
+  Incident, 
+  AgentStep, 
+  HITLAction, 
+  MerkleAuditBlock, 
+  TelemetryMetrics, 
+  CertifiedFacility,
+  SystemStatusResponse,
+  SecurityScanResponse,
+  BenchmarkResponse,
+  TriggerIncidentPayload,
+  BigQueryExportResponse,
+  FirestoreExportResponse
+} from '../types/index.js';
 
 const API_BASE = '/api';
 
@@ -15,14 +28,7 @@ export const api = {
     return { incident: data.incident, steps: data.steps || [] };
   },
 
-  async triggerIncident(payload: {
-    type: Incident['type'];
-    title: string;
-    priority: Incident['priority'];
-    source: string;
-    payload: Record<string, any>;
-    rawInputText?: string;
-  }): Promise<{ incident: Incident; hitlRequired: boolean }> {
+  async triggerIncident(payload: TriggerIncidentPayload): Promise<{ incident: Incident; hitlRequired: boolean }> {
     const res = await fetch(`${API_BASE}/incidents/trigger`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -49,7 +55,7 @@ export const api = {
     return {};
   },
 
-  async getSystemStatus(): Promise<any> {
+  async getSystemStatus(): Promise<SystemStatusResponse> {
     const res = await fetch(`${API_BASE}/system/status`);
     return await res.json();
   },
@@ -92,13 +98,13 @@ export const api = {
     return data.success;
   },
 
-  async getAuditLedger(): Promise<{ integrity: any; blocks: MerkleAuditBlock[] }> {
+  async getAuditLedger(): Promise<{ integrity: { isValid: boolean; message: string; totalBlocksVerified?: number }; blocks: MerkleAuditBlock[] }> {
     const res = await fetch(`${API_BASE}/security/audit`);
     const data = await res.json();
     return { integrity: data.integrity, blocks: data.blocks || [] };
   },
 
-  async testSecurityFirewall(input: string): Promise<any> {
+  async testSecurityFirewall(input: string): Promise<SecurityScanResponse> {
     const res = await fetch(`${API_BASE}/security/scan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -113,19 +119,19 @@ export const api = {
     return data.metrics;
   },
 
-  async runBenchmark(): Promise<any> {
+  async runBenchmark(): Promise<BenchmarkResponse> {
     const res = await fetch(`${API_BASE}/benchmark/run`, {
       method: 'POST'
     });
     return await res.json();
   },
 
-  async getBigQueryExport(): Promise<{ tableDDL: string; rowCount: number; rows: any[] }> {
+  async getBigQueryExport(): Promise<BigQueryExportResponse> {
     const res = await fetch(`${API_BASE}/export/bigquery`);
     return await res.json();
   },
 
-  async getFirestoreExport(): Promise<{ firestoreRules: string; collectionsConfigured: string[] }> {
+  async getFirestoreExport(): Promise<FirestoreExportResponse> {
     const res = await fetch(`${API_BASE}/export/firestore`);
     return await res.json();
   },
@@ -136,12 +142,12 @@ export const api = {
     return data.facilities || [];
   },
 
-  async getFirebaseStatus(): Promise<any> {
+  async getFirebaseStatus(): Promise<{ success: boolean; firestore: Record<string, unknown> }> {
     const res = await fetch(`${API_BASE}/firebase/status`);
     return await res.json();
   },
 
-  async evaluateGemini(): Promise<any> {
+  async evaluateGemini(): Promise<{ success: boolean; evaluation: Record<string, unknown> }> {
     const res = await fetch(`${API_BASE}/gemini/evaluate`, {
       method: 'POST'
     });

@@ -12,6 +12,10 @@ export interface AuthUser {
   expiresAt: number;
 }
 
+export interface AuthenticatedRequest extends Request {
+  user?: AuthUser;
+}
+
 export class AuthService {
   /**
    * Signs an authenticated token using HMAC-SHA256 with server-held secret.
@@ -129,7 +133,7 @@ export function authenticateRole(allowedRoles: UserRole[]) {
     }
 
     // Attach verified user to request
-    (req as any).user = user;
+    (req as AuthenticatedRequest).user = user;
     next();
   };
 }

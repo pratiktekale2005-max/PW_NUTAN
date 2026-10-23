@@ -124,3 +124,101 @@ export interface CertifiedFacility {
   coldChainTier: string;
   contactRadio: string;
 }
+
+export interface SystemStatusResponse {
+  success: boolean;
+  gemini: {
+    status: 'LIVE' | 'UNAVAILABLE' | 'SIMULATED';
+    model: string;
+    verified: boolean;
+    apiKeyPresent: boolean;
+    tier: string;
+  };
+  firestore: {
+    status: 'LIVE' | 'UNAVAILABLE' | 'SIMULATED';
+    mode: string;
+    projectId: string;
+    region: string;
+    database: string;
+    collections: string[];
+    pendingConfig: string | null;
+  };
+  authentication: {
+    status: string;
+    mode: string;
+    tokenExpiryHours: number;
+    supportedRoles: string[];
+  };
+  agentWorkflow: {
+    status: string;
+    cognitiveStages: string[];
+    reactEngineActive: boolean;
+  };
+}
+
+export interface SecurityAssessment {
+  isSafe: boolean;
+  injectionDetected: boolean;
+  threatLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'CRITICAL';
+  threatPattern?: string;
+  sanitizedInput: string;
+  contextTag: string;
+  checkedAt: string;
+  signature: string;
+}
+
+export interface TriggerIncidentPayload {
+  type: Incident['type'];
+  title: string;
+  priority: Incident['priority'];
+  source: string;
+  payload: Record<string, unknown>;
+  rawInputText?: string;
+}
+
+export interface SecurityScanResponse {
+  success: boolean;
+  assessment: SecurityAssessment;
+}
+
+export interface BenchmarkResponse {
+  success: boolean;
+  benchmark: {
+    traditionalWorkflow: {
+      method: string;
+      stepsCount: number;
+      estimatedTimeMinutes: number;
+      spoilageRiskPercentage: number;
+      costEstimateUsd: number;
+      complianceAudit: string;
+    };
+    aegisPulseAutonomous: {
+      method: string;
+      stepsCount: number;
+      measuredTimeSeconds: string;
+      spoilageRiskPercentage: number;
+      costEstimateUsd: number;
+      complianceAudit: string;
+    };
+    measuredImprovement: {
+      timeReductionFactor: string;
+      laborCostReduction: string;
+      spoilagePreventedAssetValue: string;
+    };
+  };
+  incident: Incident;
+}
+
+export interface BigQueryExportResponse {
+  success: boolean;
+  tableDDL: string;
+  rowCount: number;
+  rows: Record<string, unknown>[];
+}
+
+export interface FirestoreExportResponse {
+  success: boolean;
+  firestoreRules: string;
+  collectionsConfigured: string[];
+  status?: Record<string, unknown>;
+}

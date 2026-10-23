@@ -99,6 +99,17 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
 
 export class AutonomousToolsExecutor {
   /**
+   * Pre-execution argument validation against registered tool specification.
+   */
+  public static validateToolArguments(toolName: string, args: Record<string, any>): { valid: boolean; missingFields: string[] } {
+    const def = REGISTERED_TOOLS.find(t => t.name === toolName);
+    if (!def) return { valid: false, missingFields: ['UNKNOWN_TOOL'] };
+    if (!args || typeof args !== 'object') return { valid: false, missingFields: def.parameters.required };
+    const missing = def.parameters.required.filter(req => args[req] === undefined || args[req] === null);
+    return { valid: missing.length === 0, missingFields: missing };
+  }
+
+  /**
    * Executes a tool dynamically with schema validation and defensive error handling.
    */
   public static async executeTool(toolName: string, args: Record<string, any>): Promise<any> {

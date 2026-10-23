@@ -7,7 +7,8 @@ import { FirestoreSyncService } from '../services/firestoreSyncService.js';
 import { FirestoreService } from '../services/firestoreService.js';
 import { GeminiService } from '../services/geminiService.js';
 import { rateLimiter, requireRole, validatePayloadSize } from '../security/rateLimiter.js';
-import { AuthService } from '../security/auth.js';
+import { AuthService, AuthenticatedRequest } from '../security/auth.js';
+import { AgentStep } from '../types/index.js';
 import { CERTIFIED_FACILITIES, DRUG_SAFETY_GRAPH } from '../data/mockDatabase.js';
 
 const router = Router();
@@ -136,7 +137,7 @@ router.get('/stream', (req: Request, res: Response) => {
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
-  const listener = (step: any) => {
+  const listener = (step: AgentStep) => {
     res.write(`data: ${JSON.stringify(step)}\n\n`);
   };
 
@@ -162,7 +163,10 @@ router.get('/hitl/pending', async (req: Request, res: Response) => {
 // Server-side authorization check: Only Clinician, Logistics Officer, or Admin can sign off
 router.post('/hitl/approve', requireRole(['CLINICIAN', 'LOGISTICS_OFFICER', 'ADMIN']), async (req: Request, res: Response) => {
   const { actionId } = req.body;
-  const user = (req as any).user;
+  const user = (req as AuthenticatedRequest).user;
+  if (!user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized: Session missing' });
+  }
 
   if (!actionId) {
     return res.status(400).json({ success: false, error: 'actionId is required' });
@@ -195,7 +199,10 @@ router.post('/hitl/approve', requireRole(['CLINICIAN', 'LOGISTICS_OFFICER', 'ADM
 // Server-side authorization check: Reject / Override HITL Action
 router.post('/hitl/reject', requireRole(['CLINICIAN', 'LOGISTICS_OFFICER', 'ADMIN']), (req: Request, res: Response) => {
   const { actionId, reason } = req.body;
-  const user = (req as any).user;
+  const user = (req as AuthenticatedRequest).user;
+  if (!user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized: Session missing' });
+  }
 
   if (!actionId) {
     return res.status(400).json({ success: false, error: 'actionId is required' });

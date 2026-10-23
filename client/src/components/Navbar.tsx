@@ -11,9 +11,11 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api.js';
 
+export type NavigationTab = 'command' | 'map' | 'security' | 'benchmark' | 'google-cloud';
+
 interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: NavigationTab;
+  setActiveTab: (tab: NavigationTab) => void;
   pendingHITLCount: number;
 }
 
@@ -127,16 +129,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, pending
         </div>
       </div>
 
-      <nav className="tabs-bar" aria-label="Main Navigation">
+      <nav className="tabs-bar" role="tablist" aria-label="Main Navigation">
         <button 
           id="tab-command-center"
+          role="tab"
+          aria-selected={activeTab === 'command'}
+          aria-label="Live Command Center Tab"
           className={`tab-btn ${activeTab === 'command' ? 'active' : ''}`}
           onClick={() => setActiveTab('command')}
         >
-          <Activity size={16} />
+          <Activity size={16} aria-hidden="true" />
           <span>Live Command Center</span>
           {pendingHITLCount > 0 && (
-            <span className="badge badge-hitl" style={{ marginLeft: '4px' }}>
+            <span className="badge badge-hitl" style={{ marginLeft: '4px' }} aria-label={`${pendingHITLCount} pending approvals`}>
               {pendingHITLCount} HITL
             </span>
           )}
@@ -144,37 +149,49 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, pending
 
         <button 
           id="tab-geospatial-map"
+          role="tab"
+          aria-selected={activeTab === 'map'}
+          aria-label="Geospatial Bio-Routing Map Tab"
           className={`tab-btn ${activeTab === 'map' ? 'active' : ''}`}
           onClick={() => setActiveTab('map')}
         >
-          <MapPin size={16} />
+          <MapPin size={16} aria-hidden="true" />
           <span>Geospatial Bio-Routing</span>
         </button>
 
         <button 
           id="tab-security-firewall"
+          role="tab"
+          aria-selected={activeTab === 'security'}
+          aria-label="Security Firewall and Merkle Audit Tab"
           className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
           onClick={() => setActiveTab('security')}
         >
-          <Lock size={16} />
+          <Lock size={16} aria-hidden="true" />
           <span>Security Firewall & Merkle Audit</span>
         </button>
 
         <button 
           id="tab-telemetry-benchmark"
+          role="tab"
+          aria-selected={activeTab === 'benchmark'}
+          aria-label="Telemetry and Benchmark Suite Tab"
           className={`tab-btn ${activeTab === 'benchmark' ? 'active' : ''}`}
           onClick={() => setActiveTab('benchmark')}
         >
-          <Cpu size={16} />
+          <Cpu size={16} aria-hidden="true" />
           <span>Telemetry & Benchmark Suite</span>
         </button>
 
         <button 
           id="tab-google-cloud-export"
+          role="tab"
+          aria-selected={activeTab === 'google-cloud'}
+          aria-label="Google Cloud and BigQuery Integration Tab"
           className={`tab-btn ${activeTab === 'google-cloud' ? 'active' : ''}`}
           onClick={() => setActiveTab('google-cloud')}
         >
-          <Database size={16} />
+          <Database size={16} aria-hidden="true" />
           <span>Google Cloud & BigQuery</span>
         </button>
       </nav>
