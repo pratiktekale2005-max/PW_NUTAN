@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { TelemetryMetrics } from '../types/index.js';
+import type { TelemetryMetrics, BenchmarkResponse } from '../types/index.js';
 import { 
   Zap, 
   Timer, 
@@ -8,12 +8,12 @@ import {
 
 interface BenchmarkRunnerProps {
   metrics: TelemetryMetrics;
-  onRunBenchmark: () => Promise<any>;
+  onRunBenchmark: () => Promise<BenchmarkResponse>;
 }
 
 export const BenchmarkRunner: React.FC<BenchmarkRunnerProps> = ({ metrics, onRunBenchmark }) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [benchmarkResult, setBenchmarkResult] = useState<any>(null);
+  const [benchmarkResult, setBenchmarkResult] = useState<BenchmarkResponse['benchmark'] | null>(null);
 
   const handleRun = async () => {
     setIsRunning(true);

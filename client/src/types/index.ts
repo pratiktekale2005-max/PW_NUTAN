@@ -222,3 +222,25 @@ export interface FirestoreExportResponse {
   collectionsConfigured: string[];
   status?: Record<string, unknown>;
 }
+
+export interface GeminiEvaluationResult {
+  framework: string;
+  schemaConformanceRate: string;
+  promptInjectionDefense: string;
+  rateLimiterStatus: string;
+  totalTokensConsumed: number;
+  measuredLatencyMs: {
+    proCausalReasoningMs: number;
+    flashExtractionMs: number;
+    totalEvaluationMs: number;
+  };
+  structuredOutputVerified: {
+    medTestAssessmentLength: number;
+    coldTestToolsCount: number;
+  };
+}
+
+export interface GeminiEvaluationResponse {
+  success: boolean;
+  evaluation: GeminiEvaluationResult;
+}

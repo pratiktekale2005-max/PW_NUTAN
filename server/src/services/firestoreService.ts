@@ -6,10 +6,21 @@ import {
   Incident, 
   MerkleAuditBlock, 
   HITLAction, 
-  CertifiedFacility, 
-  TelemetryMetrics 
+  CertifiedFacility 
 } from '../types/index.js';
 import { CERTIFIED_FACILITIES } from '../data/mockDatabase.js';
+
+export interface FirestoreStatusReport {
+  status: 'LIVE' | 'UNAVAILABLE' | 'SIMULATED';
+  initialized: boolean;
+  connected: boolean;
+  mode: string;
+  projectId: string;
+  region: string;
+  database: string;
+  collections: string[];
+  pendingConfig: string | null;
+}
 
 export class FirestoreService {
   private static db: Firestore | null = null;
@@ -75,7 +86,7 @@ export class FirestoreService {
   /**
    * Returns current Firestore connection status for UI and audit inspector.
    */
-  public static getStatus() {
+  public static getStatus(): FirestoreStatusReport {
     const statusVal: 'LIVE' | 'UNAVAILABLE' | 'SIMULATED' = this.isRealCloudConnected ? 'LIVE' : 'SIMULATED';
     return {
       status: statusVal,

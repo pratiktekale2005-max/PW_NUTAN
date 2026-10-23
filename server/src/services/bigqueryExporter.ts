@@ -1,4 +1,21 @@
-import { Incident, AgentStep, MerkleAuditBlock, TelemetryMetrics } from '../types/index.js';
+import { Incident, MerkleAuditBlock, TelemetryMetrics } from '../types/index.js';
+
+export interface BigQueryRow {
+  event_id: string;
+  incident_id: string;
+  event_timestamp: string;
+  incident_type: string;
+  priority: string;
+  resolution_status: string;
+  model_tier: string;
+  response_latency_ms: number;
+  tokens_consumed: number;
+  estimated_cost_saved_usd: number;
+  manual_minutes_saved: number;
+  merkle_current_hash: string;
+  merkle_previous_hash: string;
+  raw_payload_json: string;
+}
 
 export class BigQueryExporter {
   /**
@@ -41,7 +58,11 @@ CLUSTER BY incident_type, priority;
     incidents: Incident[],
     auditBlocks: MerkleAuditBlock[],
     metrics: TelemetryMetrics
-  ): Array<Record<string, any>> {
+  ): BigQueryRow[] {
+    const avgTokensPerIncident = Math.round(
+      metrics.tokensConsumed / Math.max(1, metrics.totalIncidentsProcessed || incidents.length || 1)
+    );
+
     return incidents.map((inc, index) => {
       const associatedAudit = auditBlocks.find(b => b.incidentId === inc.id) || auditBlocks[0];
       return {
@@ -53,7 +74,7 @@ CLUSTER BY incident_type, priority;
         resolution_status: inc.status,
         model_tier: inc.priority === 'CRITICAL' ? 'TIER_3_GEMINI_PRO' : 'TIER_2_GEMINI_FLASH',
         response_latency_ms: inc.resolutionTimeMs || 1840,
-        tokens_consumed: 540,
+        tokens_consumed: avgTokensPerIncident,
         estimated_cost_saved_usd: inc.type === 'COLD_CHAIN_EXCURSION' ? 42000.0 : 850.0,
         manual_minutes_saved: inc.type === 'COLD_CHAIN_EXCURSION' ? 95.0 : 45.0,
         merkle_current_hash: associatedAudit?.currentHash || '0000',

@@ -1,4 +1,4 @@
-import { CERTIFIED_FACILITIES, DRUG_SAFETY_GRAPH, COLD_CHAIN_SPECIFICATIONS, CertifiedFacility } from '../data/mockDatabase.js';
+import { CERTIFIED_FACILITIES, DRUG_SAFETY_GRAPH, COLD_CHAIN_SPECIFICATIONS, DrugSafetyRule } from '../data/mockDatabase.js';
 
 export interface ToolDefinition {
   name: string;
@@ -167,6 +167,8 @@ export class AutonomousToolsExecutor {
             success: true,
             bioItem: spec.bioItem,
             currentTempC,
+            ambientTempC,
+            ambientThermalGradientC: Math.max(0, ambientTempC - currentTempC),
             nominalAllowedRange: `${spec.nominalTempMinC}°C to ${spec.nominalTempMaxC}°C`,
             isExcursionActive: isBreached,
             calculatedPotencyLossPercent: potencyLossPercent,
@@ -181,7 +183,7 @@ export class AutonomousToolsExecutor {
 
         case 'clinical_drug_interaction_checker': {
           const { prescribedDrug, activeMedications = [], patientEgfr, allergies = [] } = args;
-          const conflicts: Array<{ rule: any; urgency: string }> = [];
+          const conflicts: Array<{ rule: DrugSafetyRule; urgency: string }> = [];
 
           // Cross-reference with clinical safety graph
           for (const drug of activeMedications) {
@@ -313,10 +315,11 @@ export class AutonomousToolsExecutor {
         default:
           throw new Error(`Tool "${toolName}" is not registered in AegisPulse autonomous tool registry.`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Tool execution encountered an internal error';
       return {
         success: false,
-        error: error.message || 'Tool execution encountered an internal error',
+        error: message,
         executionDurationMs: Date.now() - startTime
       };
     }

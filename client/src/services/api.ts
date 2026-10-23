@@ -10,7 +10,8 @@ import type {
   BenchmarkResponse,
   TriggerIncidentPayload,
   BigQueryExportResponse,
-  FirestoreExportResponse
+  FirestoreExportResponse,
+  GeminiEvaluationResponse
 } from '../types/index.js';
 
 const API_BASE = '/api';
@@ -147,7 +148,7 @@ export const api = {
     return await res.json();
   },
 
-  async evaluateGemini(): Promise<{ success: boolean; evaluation: Record<string, unknown> }> {
+  async evaluateGemini(): Promise<GeminiEvaluationResponse> {
     const res = await fetch(`${API_BASE}/gemini/evaluate`, {
       method: 'POST'
     });

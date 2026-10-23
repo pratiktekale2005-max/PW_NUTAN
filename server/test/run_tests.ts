@@ -6,7 +6,6 @@ import { AutonomousToolsExecutor } from '../src/tools/index.js';
 import { AgentOrchestrator } from '../src/agents/orchestrator.js';
 import { GeminiService } from '../src/services/geminiService.js';
 import { FirestoreService } from '../src/services/firestoreService.js';
-import { config } from '../src/config/index.js';
 import { AuthService } from '../src/security/auth.js';
 
 async function runTestSuite() {
@@ -104,6 +103,8 @@ async function runTestSuite() {
     securityContext: 'TEST_CONTEXT',
     modelTier: 'TIER_2_GEMINI_FLASH'
   });
+  assert(call1.modelUsed.length > 0, 'Initial reasoning query executed');
+
   const call2 = await GeminiService.reasonOverIncident({
     incidentType: 'COLD_CHAIN_EXCURSION',
     incidentData: testPayload,

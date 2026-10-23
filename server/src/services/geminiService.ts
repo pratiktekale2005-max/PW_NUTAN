@@ -373,7 +373,8 @@ Available Specialized Tools:
       assessment = 'Autonomous supply chain balancing route successfully formulated.';
     }
 
-    const latencyMs = tier === 'TIER_3_GEMINI_PRO' ? 240 + Math.floor(Math.random() * 80) : 95 + Math.floor(Math.random() * 40);
+    const simulatedDuration = tier === 'TIER_3_GEMINI_PRO' ? 240 + Math.floor(Math.random() * 80) : 95 + Math.floor(Math.random() * 40);
+    const latencyMs = Math.max(simulatedDuration, Date.now() - startTime);
 
     return {
       modelUsed: tier === 'TIER_3_GEMINI_PRO' ? 'gemini-1.5-pro (simulated)' : 'gemini-1.5-flash (simulated)',

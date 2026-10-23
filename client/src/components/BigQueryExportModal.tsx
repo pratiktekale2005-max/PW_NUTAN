@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Database, Copy, Check, Download, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api.js';
+import type { BigQueryExportResponse, FirestoreExportResponse, GeminiEvaluationResult } from '../types/index.js';
 
 interface BigQueryExportProps {
-  bigQueryData: { tableDDL: string; rowCount: number; rows: any[] } | null;
-  firestoreData: { firestoreRules: string; collectionsConfigured: string[]; status?: any } | null;
+  bigQueryData: BigQueryExportResponse | null;
+  firestoreData: FirestoreExportResponse | null;
 }
 
 export const BigQueryExportModal: React.FC<BigQueryExportProps> = ({ bigQueryData, firestoreData }) => {
   const [copiedDDL, setCopiedDDL] = useState(false);
   const [copiedRules, setCopiedRules] = useState(false);
   const [evaluatingGemini, setEvaluatingGemini] = useState(false);
-  const [geminiEvalResult, setGeminiEvalResult] = useState<any>(null);
+  const [geminiEvalResult, setGeminiEvalResult] = useState<GeminiEvaluationResult | null>(null);
 
   const copyToClipboard = (text: string, type: 'DDL' | 'RULES') => {
     navigator.clipboard.writeText(text);

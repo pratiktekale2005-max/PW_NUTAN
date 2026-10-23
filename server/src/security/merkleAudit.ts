@@ -6,21 +6,22 @@ export class MerkleAuditLedger {
   private static chain: MerkleAuditBlock[] = [];
   private static genesisHash: string = '0000000000000000000000000000000000000000000000000000000000000000';
   // Mutex lock to guarantee serial, concurrency-safe append operations
-  private static appendMutex: Promise<any> = Promise.resolve();
+  private static appendMutex: Promise<unknown> = Promise.resolve();
 
   /**
    * Deterministic canonical serialization (RFC 8785 style):
    * Recursively sorts object keys so equivalent payloads always yield identical SHA-256 hashes.
    */
-  public static canonicalStringify(obj: any): string {
+  public static canonicalStringify(obj: unknown): string {
     if (obj === null || typeof obj !== 'object') {
       return JSON.stringify(obj);
     }
     if (Array.isArray(obj)) {
       return '[' + obj.map(item => this.canonicalStringify(item)).join(',') + ']';
     }
-    const sortedKeys = Object.keys(obj).sort();
-    const pairs = sortedKeys.map(key => `${JSON.stringify(key)}:${this.canonicalStringify(obj[key])}`);
+    const record = obj as Record<string, unknown>;
+    const sortedKeys = Object.keys(record).sort();
+    const pairs = sortedKeys.map(key => `${JSON.stringify(key)}:${this.canonicalStringify(record[key])}`);
     return '{' + pairs.join(',') + '}';
   }
 
@@ -45,13 +46,13 @@ export class MerkleAuditLedger {
     incidentId: string;
     action: string;
     payloadSummary: string;
-    details?: Record<string, any>;
+    details?: unknown;
   }): Promise<MerkleAuditBlock> {
     // Chain onto mutex to guarantee serialized execution
     const block = await (this.appendMutex = this.appendMutex.then(() => {
       return this.executeAppend(params);
     }));
-    return block;
+    return block as MerkleAuditBlock;
   }
 
   /**
@@ -61,7 +62,7 @@ export class MerkleAuditLedger {
     incidentId: string;
     action: string;
     payloadSummary: string;
-    details?: Record<string, any>;
+    details?: unknown;
   }): MerkleAuditBlock {
     return this.executeAppend(params);
   }
@@ -70,7 +71,7 @@ export class MerkleAuditLedger {
     incidentId: string;
     action: string;
     payloadSummary: string;
-    details?: Record<string, any>;
+    details?: unknown;
   }): MerkleAuditBlock {
     const previousHash = this.chain.length > 0 
       ? this.chain[this.chain.length - 1].currentHash 

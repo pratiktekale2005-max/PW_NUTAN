@@ -9,7 +9,6 @@ import { GeminiService } from '../services/geminiService.js';
 import { rateLimiter, requireRole, validatePayloadSize } from '../security/rateLimiter.js';
 import { AuthService, AuthenticatedRequest } from '../security/auth.js';
 import { AgentStep } from '../types/index.js';
-import { CERTIFIED_FACILITIES, DRUG_SAFETY_GRAPH } from '../data/mockDatabase.js';
 
 const router = Router();
 
@@ -123,8 +122,9 @@ router.post('/incidents/trigger', rateLimiter, validatePayloadSize(100 * 1024), 
       stepsCount: result.steps.length,
       hitlRequired: result.hitlRequired
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message || 'Processing failed' });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Processing failed';
+    res.status(500).json({ success: false, error: message });
   }
 });
 

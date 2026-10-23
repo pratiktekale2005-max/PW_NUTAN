@@ -2,8 +2,7 @@ import {
   Incident, 
   AgentStep, 
   HITLAction, 
-  TelemetryMetrics,
-  IncidentStatus
+  TelemetryMetrics
 } from '../types/index.js';
 import { PromptFirewall } from '../security/firewall.js';
 import { MerkleAuditLedger } from '../security/merkleAudit.js';
@@ -18,7 +17,7 @@ export class AgentOrchestrator {
   private static streamListeners: Array<(step: AgentStep) => void> = [];
 
   // Semantic & Rule Cache for Tier 1 0-token instant execution
-  private static semanticCache: Map<string, any> = new Map();
+  private static semanticCache: Map<string, unknown> = new Map();
 
   // Telemetry Aggregates
   private static metrics: TelemetryMetrics = {
@@ -605,20 +604,9 @@ export class AgentOrchestrator {
     if (!args || typeof args !== 'object') {
       return { isValid: false, error: 'Tool arguments must be a non-null object' };
     }
-    if (name === 'coldchain_telemetry_analyzer') {
-      if (typeof args.currentTempC !== 'number') {
-        return { isValid: false, error: 'currentTempC must be a valid number' };
-      }
-    }
-    if (name === 'clinical_drug_interaction_checker') {
-      if (!args.prescribedDrug || typeof args.prescribedDrug !== 'string') {
-        return { isValid: false, error: 'prescribedDrug is required as a string' };
-      }
-    }
-    if (name === 'google_maps_emergency_routing') {
-      if (typeof args.originLat !== 'number' || typeof args.originLng !== 'number') {
-        return { isValid: false, error: 'originLat and originLng coordinates must be numeric values' };
-      }
+    const validation = AutonomousToolsExecutor.validateToolArguments(name, args);
+    if (!validation.valid) {
+      return { isValid: false, error: `Missing or invalid arguments: ${validation.missingFields.join(', ')}` };
     }
     return { isValid: true };
   }

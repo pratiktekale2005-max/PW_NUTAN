@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './services/api.js';
 import type { 
   Incident, 
@@ -69,33 +69,24 @@ export const App: React.FC = () => {
     agentWorkflow: { status: 'VERIFIED', cognitiveStages: ['OBSERVE', 'VALIDATE', 'REASON', 'PLAN', 'TOOL', 'VERIFY', 'APPROVAL', 'AUDIT', 'RESPOND'], reactEngineActive: true }
   });
 
-  // Initial load
-  useEffect(() => {
-    loadInitialData();
-
-    // Subscribe to real-time SSE Thought Stream
-    const unsubscribe = api.subscribeToThoughtStream((newStep: AgentStep) => {
-      setCurrentSteps((prev) => {
-        // Avoid duplicate steps
-        if (prev.some((s) => s.id === newStep.id)) return prev;
-        return [...prev, newStep];
-      });
-
-      // If step is from currently selected or new incident, update view
-      if (!selectedIncidentId || selectedIncidentId === newStep.incidentId) {
-        setSelectedIncidentId(newStep.incidentId);
-      }
-
-      setIsStreaming(newStep.stage !== 'RESPOND' && newStep.stage !== 'AUDIT');
-      refreshIncidentsAndMetrics();
-    });
-
-    return () => {
-      unsubscribe();
-    };
+  const refreshIncidentsAndMetrics = useCallback(async () => {
+    try {
+      const [incs, pending, met, audit] = await Promise.all([
+        api.getIncidents(),
+        api.getPendingHITLActions(),
+        api.getTelemetryMetrics(),
+        api.getAuditLedger()
+      ]);
+      setIncidents(incs);
+      setPendingHITLActions(pending);
+      if (met) setMetrics(met);
+      setAuditBlocks(audit.blocks || []);
+    } catch (err) {
+      console.error('Error refreshing state:', err);
+    }
   }, []);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       const [incs, pending, met, facs, audit, bq, fs] = await Promise.all([
         api.getIncidents(),
@@ -126,24 +117,37 @@ export const App: React.FC = () => {
     } catch (err) {
       console.error('Error loading initial data:', err);
     }
-  };
+  }, []);
 
-  const refreshIncidentsAndMetrics = async () => {
-    try {
-      const [incs, pending, met, audit] = await Promise.all([
-        api.getIncidents(),
-        api.getPendingHITLActions(),
-        api.getTelemetryMetrics(),
-        api.getAuditLedger()
-      ]);
-      setIncidents(incs);
-      setPendingHITLActions(pending);
-      if (met) setMetrics(met);
-      setAuditBlocks(audit.blocks || []);
-    } catch (err) {
-      console.error('Error refreshing state:', err);
-    }
-  };
+  // Initial load and SSE stream subscription
+  useEffect(() => {
+    let isSubscribed = true;
+    void (async () => {
+      if (isSubscribed) {
+        await loadInitialData();
+      }
+    })();
+
+    // Subscribe to real-time SSE Thought Stream
+    const unsubscribe = api.subscribeToThoughtStream((newStep: AgentStep) => {
+      setCurrentSteps((prev) => {
+        // Avoid duplicate steps
+        if (prev.some((s) => s.id === newStep.id)) return prev;
+        return [...prev, newStep];
+      });
+
+      // Update selected incident via functional updater to avoid stale closure or dependency issues
+      setSelectedIncidentId((prev) => (!prev || prev === newStep.incidentId ? newStep.incidentId : prev));
+
+      setIsStreaming(newStep.stage !== 'RESPOND' && newStep.stage !== 'AUDIT');
+      refreshIncidentsAndMetrics();
+    });
+
+    return () => {
+      isSubscribed = false;
+      unsubscribe();
+    };
+  }, [loadInitialData, refreshIncidentsAndMetrics]);
 
   const handleSelectIncident = async (id: string) => {
     setSelectedIncidentId(id);
@@ -386,7 +390,7 @@ export const App: React.FC = () => {
               <div>
                 <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Automated Tests</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
-                  <strong style={{ fontSize: '0.9rem', color: '#10b981' }}>51 / 51 PASSED</strong>
+                  <strong style={{ fontSize: '0.9rem', color: '#10b981' }}>52 / 52 PASSED</strong>
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>(100% Suites)</span>
                 </div>
               </div>

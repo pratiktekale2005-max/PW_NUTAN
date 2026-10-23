@@ -26,12 +26,13 @@ app.use((req, res, next) => {
 app.use('/api', apiRouter);
 
 // Global Error Handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[ServerError]', err);
+  const message = err instanceof Error ? err.message : 'An unexpected error occurred';
   res.status(500).json({
     success: false,
     error: 'Internal AegisPulse Error',
-    message: err.message || 'An unexpected error occurred'
+    message
   });
 });
 
