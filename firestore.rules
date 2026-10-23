@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ====================================================================
+    // Baseline Security: Deny all access to unauthenticated requests
+    // ====================================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && 
+        (request.auth.token.role == role || request.auth.token[role] == true);
+    }
+    
+    function isAdmin() {
+      return hasRole('ADMIN');
+    }
+
+    function isClinician() {
+      return hasRole('CLINICIAN') || isAdmin();
+    }
+
+    function isLogisticsOfficer() {
+      return hasRole('LOGISTICS_OFFICER') || isAdmin();
+    }
+
+    function isAuditor() {
+      return hasRole('AUDITOR') || isAdmin();
+    }
+
+    // ====================================================================
+    // Collection: /incidents
+    // - Read: Authenticated hospital & logistics personnel only
+    // - Create: Valid authenticated staff with required incident fields
+    // - Update: Clinicians & Logistics Officers only
+    // - Delete: NEVER permitted (regulatory retention / FDA 21 CFR Part 11)
+    // ====================================================================
+    match /incidents/{incidentId} {
+      allow read: if isAuthenticated() && (isClinician() || isLogisticsOfficer() || isAuditor());
+      allow create: if isAuthenticated() && 
+        request.resource.data.keys().hasAll(['id', 'type', 'priority', 'status', 'timestamp']) &&
+        request.resource.data.status in ['DETECTED', 'ANALYZING', 'REASONING', 'HITL_PENDING', 'EXECUTING_TOOLS', 'RESOLVED', 'QUARANTINED', 'BLOCKED'];
+      allow update: if isAuthenticated() && (isClinician() || isLogisticsOfficer()) &&
+        // Prevent tampering with original creation timestamp or ID
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.timestamp == resource.data.timestamp;
+      allow delete: if false; // Regulatory retention: Deletions are forbidden
+    }
+
+    // ====================================================================
+    // Collection: /audit_ledger
+    // - Cryptographic SHA-256 Merkle Audit Chain
+    // - Read: Auditors and Admins only
+    // - Create: Append-only by service accounts / authorized system roles
+    // - Update & Delete: STRICTLY FORBIDDEN (Immutability guarantee)
+    // ====================================================================
+    match /audit_ledger/{blockId} {
+      allow read: if isAuditor();
+      allow create: if isAuthenticated() && 
+        hasRole('SYSTEM_AGENT_SERVICE_ACCOUNT') &&
+        request.resource.data.keys().hasAll(['blockIndex', 'currentHash', 'previousHash', 'dataHash', 'timestamp', 'immutableSignature']);
+      allow update, delete: if false; // Strict Cryptographic Immutability
+    }
+
+    // ====================================================================
+    // Collection: /hitl_actions
+    // - Consequential actions requiring Human-In-The-Loop Sign-Off
+    // - Read: Authenticated personnel
+    // - Update: Clinician or Logistics Officer matching requiredRole
+    // - Delete: Denied
+    // ====================================================================
+    match /hitl_actions/{actionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && hasRole('SYSTEM_AGENT_SERVICE_ACCOUNT');
+      allow update: if isAuthenticated() && (
+        (resource.data.requiredRole == 'CLINICIAN' && isClinician()) ||
+        (resource.data.requiredRole == 'LOGISTICS_OFFICER' && isLogisticsOfficer()) ||
+        isAdmin()
+      ) && request.resource.data.status in ['APPROVED', 'REJECTED'];
+      allow delete: if false;
+    }
+
+    // ====================================================================
+    // Collection: /facilities
+    // - Certified Trauma Centers & Cryogenic Hubs
+    // - Read: All authenticated personnel
+    // - Write: Administrative role only
+    // ====================================================================
+    match /facilities/{facilityId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ====================================================================
+    // Default Fallback: Deny any other path
+    // ====================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

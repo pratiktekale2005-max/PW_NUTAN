@@ -1,0 +1,25 @@
+{
+  "name": "aegispulse-ai",
+  "version": "1.0.0",
+  "description": "AegisPulse AI: Autonomous Clinical & Bio-Logistics Resilience System",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build:server": "npm --prefix server run build",
+    "build:client": "npm --prefix client run build",
+    "build": "npm run build:server && npm run build:client",
+    "test": "npm --prefix server run test",
+    "start": "npm --prefix server run start"
+  },
+  "keywords": [
+    "autonomous-agent",
+    "google-gemini",
+    "security-firewall",
+    "merkle-audit",
+    "bigquery",
+    "healthcare-resilience",
+    "cold-chain"
+  ],
+  "author": "Lead AI & Security Engineering Team",
+  "license": "MIT"
+}
